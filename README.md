@@ -16,7 +16,7 @@
 - **Python 3.7** (maybe 3.8 is also supported but did not try yet)
 
 ## ENVIRONMENT
-- This project is run on Visual Studio Community version 2019 or .
+
 - Project is supported currently only on Windows 10. For linux versions, some changes on the code has to be applied.
 
 ## WARNINGS
