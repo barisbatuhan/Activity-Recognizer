@@ -1,0 +1,18 @@
+# PYTHON RELATED CACHES
+__pycache__
+*/__pycache__
+*/__pycache__/*
+
+# VS CODE RELATED FILES AND FOLDERS
+.vscode
+.vscode/*
+
+# C HEADER RELATED FILES
+*/*.h.gch
+
+# RUNTIME FILES
+a.exe
+a.out
+
+# EXTRA BIG SIZED FILES
+Data/*.bag
