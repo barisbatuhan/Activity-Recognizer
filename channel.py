@@ -2,7 +2,6 @@ from Model.model import Model
 
 def load_model(path):
     print("Inside model load...")
-    # path = "./Data/model.weights"
     return Model(path)
 
 def predict(obj, inputs):
