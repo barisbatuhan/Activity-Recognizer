@@ -183,9 +183,9 @@ int Skeleton_Tracker::init_cubemos() {
     }
 
     // model window set
-    std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
-    cv::namedWindow(cvWindowName, cv::WINDOW_NORMAL);
-    cv::setWindowProperty(cvWindowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+    // std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
+    // cv::namedWindow(cvWindowName, cv::WINDOW_NORMAL);
+    // cv::setWindowProperty(cvWindowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
     return 1;
 }
 
@@ -197,26 +197,34 @@ void Skeleton_Tracker::activity_recognizer() {
                                             { 6, 7, 8 },   { 1, 8, 9 },   { 8, 9, 10 }, { 9, 10, 11 }, { 1, 11, 12 },
                                             { 11, 12, 13 }, { 12, 13, 14 }, { 1, 0, -1 }, { 0, 14, 1 }, { 14, 16, 20 },
                                             { 0, 15, 100.56 },  { 15, 17, 19 } };
-
-    PyObject* pName = NULL, * pModule = NULL, * pDict = NULL, * pFunc = NULL, * pParam = NULL, * pResult = NULL;
     Py_Initialize();
+    
+    // module loader
+    PyObject* pName = PyUnicode_FromString("channel");
+    PyObject* pModule = PyImport_Import(pName);
+    PyObject* pDict = PyModule_GetDict(pModule);
+    
+    // functions inside the module are loaded
+    PyObject* pConstructor = PyDict_GetItemString(pDict, "load_model");
+    PyObject* pPredictor = PyDict_GetItemString(pDict, "predict");
 
+    // model is loaded
+    PyObject* pWeightPath = Py_BuildValue("(s)", "./Data/model.weights");
+    PyObject* pModel = PyObject_CallObject(pConstructor, pWeightPath);
+    
+    //prediction is made
     Py_ssize_t len = limbs.size();
-    PyObject *result = PyTuple_New(len);
+    PyObject* pLimbs = PyTuple_New(len);
     for (Py_ssize_t i = 0; i < len; i++) {
         Py_ssize_t len2 = limbs[i].size();
         PyObject *item = PyTuple_New(len2);
         for (Py_ssize_t j = 0; j < len2; j++)
             PyTuple_SET_ITEM(item, j, PyFloat_FromDouble(limbs[i][j]));
-        PyTuple_SET_ITEM(result, i, item);
+        PyTuple_SET_ITEM(pLimbs, i, item);
     }
-
-    pName = PyUnicode_FromString("channel");
-    pModule = PyImport_Import(pName);
-    pDict = PyModule_GetDict(pModule);
-    pFunc = PyDict_GetItemString(pDict, "connect_to_python");
-    pParam = Py_BuildValue("(O)", result);
-    pResult = PyObject_CallObject(pFunc, pParam);
+    PyObject* pResult = PyObject_CallFunctionObjArgs(pPredictor, pModel, pLimbs, NULL);
+    
+    // prediction result is taken
     const char* res = PyUnicode_AsUTF8(pResult);
     printf("Return value: %s\n", res);
     Py_Finalize();

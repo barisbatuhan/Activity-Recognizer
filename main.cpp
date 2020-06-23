@@ -7,7 +7,7 @@ int main() {
 
     // please set the environment and process correct
     running_env curr_env = CMD;
-    process curr_proc = SKEL_TRACK_FILE;
+    process curr_proc = ACTIVITY_EST_FILE;
     std::string cubemos_license_path = "C:\\Users\\BBT\\AppData\\Local";
     std::string filename = "wavehands.bag"; // pelase set the filename correctly if a process from the file will be made
 

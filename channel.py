@@ -1,12 +1,10 @@
-from Model import model
+from Model.model import Model
 
-def process_inputs(limbs):
-    print("Printing Limbs:")
-    index = 0
-    for j in limbs:
-        print('Index:', index, '- x:', j[0], '- y:', j[1], '- z:', j[2])
-        index += 1
+def load_model(path):
+    print("Inside model load...")
+    # path = "./Data/model.weights"
+    return Model(path)
 
-def connect_to_python(limbs):
-    process_inputs(limbs)
-    return model.predict()
+def predict(obj, inputs):
+    print("Inside channel predict...")
+    return obj.predict(inputs)
