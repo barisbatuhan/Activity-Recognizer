@@ -15,4 +15,4 @@ a.exe
 a.out
 
 # EXTRA BIG SIZED FILES
-Data/*.bag
+Data/*
