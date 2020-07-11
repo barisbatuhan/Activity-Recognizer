@@ -1,9 +1,19 @@
-from Model.model import Model
+from Model.model import Act_Model
 
-def load_model(path):
-    print("Inside model load...")
-    return Model(path)
+def load_model():
+    model = Act_Model()
+    model.create_model()
+    model.load_model()
+    return model
 
-def predict(obj, inputs):
-    print("Inside channel predict...")
-    return obj.predict(inputs)
+def add_skel_data(model, frame_data):
+    if(len(model.skeletons) < 40):
+        model.skeletons.append(frame_data)
+    else:
+        for i in range(1, len(model.skeletons)):
+            model.skeletons[i - 1] = model.skeletons[i]
+            model.skeletons[-1] = frame_data
+    return 'SUCCESS'
+
+def predict(model):
+    return model.evaluate(model.skeletons)
