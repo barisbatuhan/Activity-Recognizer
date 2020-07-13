@@ -31,7 +31,7 @@ class Act_Model:
         self.labels = ["Horizontal arm wave", "High arm wave", "Two hand wave", "Catch Cap", "High throw", "Draw X",
         "Draw Tick", "Toss Paper", "Forward Kick", "Side Kick", "Take Umbrella", "Bend", "Hand Clap",
         "Walk", "Phone Call", "Drink", "Sit down", "Stand up"]
-        # self.labels.sort()
+        self.labels.sort()
 
     def create_model(self):
         input1 = Input(shape=(21504,), name="input1")
@@ -64,7 +64,9 @@ class Act_Model:
     def evaluate(self, frames):
         print("[INFO][PYTHON] Model started to evaluate.")
         in1, in2, in3, in4 = self.data_generator(frames)
+        print("[INFO][PYTHON] Input data is being manipulated.")
         predictions = self.model.predict({"input1":in1, "input2":in2, "input3":in3, "input4":in4})
+        print("[INFO][PYTHON] Action is predicted.")
         for i in predictions:
             place_max = np.where(i == np.max(i))
             value_of_max = int(place_max[0][0])
@@ -97,12 +99,13 @@ class Act_Model:
         input2_list = list()
         input3_list = list()
         input4_list = list()
-
-        list_of_all = self.resize_for_network(np.array(data))        
+        list_of_all = self.resize_for_network(np.array(data))     
+        print("[INFO][PYTHON] Resizing the data for the network is finished")   
         processed_data = list()
         for j in list_of_all:
             output = self.model_VGG19.predict(np.expand_dims(j, axis=0))
             processed_data.append(self.temp_mean_pool(output))
+        print("[INFO][PYTHON] VGG19 Prediction is finished")
         
         part_1 = np.concatenate(
             (processed_data[0], processed_data[1], processed_data[2]), axis=0)
