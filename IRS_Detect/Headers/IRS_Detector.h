@@ -110,7 +110,7 @@ void IRS_Detector::detectActivity()
         cv::Mat capturedFrame;
         int frameCount = 0;
 
-        while (cv::waitKey(1) != 27 && frameCount < 50)
+        while (cv::waitKey(1) != 27 && frameCount < 70)
         {
             // capture image
             rs2::frameset data = pipe.wait_for_frames();

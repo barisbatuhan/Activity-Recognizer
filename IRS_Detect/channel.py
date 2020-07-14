@@ -1,7 +1,14 @@
-from Model.model import Act_Model
+from MTLN_Model.model import MTLN_Model
+from DD_Model.model import DD_Model
 
 def load_model():
-    model = Act_Model()
+    # change this line for changing the model: MTLN or DD
+    selected_model = "DD"
+    model = None
+    if(selected_model == "MTLN"):
+        model = MTLN_Model()
+    elif(selected_model == "DD"):
+        model = DD_Model()
     model.create_model()
     model.load_model()
     return model
