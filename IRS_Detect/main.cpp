@@ -2,7 +2,7 @@
 
 int main() {
     IRS_Detector irs("../Data/IRS/walking.bag", false);
-    // IRS_Detector irs("-", true);
+    // IRS_Detector irs("-", false);
     // irs.trackSkeleton();
     irs.detectActivity();
 }

@@ -110,7 +110,7 @@ void IRS_Detector::detectActivity()
         cv::Mat capturedFrame;
         int frameCount = 0;
 
-        while (cv::waitKey(1) != 27 && frameCount < 70)
+        while (cv::waitKey(1) != 27)
         {
             // capture image
             rs2::frameset data = pipe.wait_for_frames();
@@ -152,14 +152,20 @@ void IRS_Detector::detectActivity()
                 Py_Finalize();
                 return;
             }
+            std::string activity = "Activity: ";
+            
             if(frameCount > 40) {
                 PyObject *pEvalResult = PyObject_CallFunctionObjArgs(pPredictor, pModel, NULL);
+                const char *activityResult = PyUnicode_AsUTF8(pEvalResult);
+                std::string actRes = activityResult;
+                activity += actRes;
                 if(pEvalResult == NULL) {
                     std::cerr << "[ERROR][DETECTOR] Problem occured while taking action result from model!" << std::endl;
                     Py_Finalize();
                     return;
                 }
             }
+            cv::putText(capturedFrame, activity.c_str(), cv::Point(50, 50), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(222, 55, 22));
             std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
             cv::imshow(cvWindowName, capturedFrame);
         }

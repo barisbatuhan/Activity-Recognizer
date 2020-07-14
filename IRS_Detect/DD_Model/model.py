@@ -60,12 +60,14 @@ class DD_Model:
     def evaluate(self, frames):
         X0, X1 = self.data_generator({"pose": frames})
         predictions = self.model.predict([X0, X1])
+        last_pred = None
         for i in predictions:
             place_max = np.where(i == np.max(i))
             value_of_max = int(place_max[0][0])
             prediction = self.labels[value_of_max]
+            last_pred = prediction
             print("Prediction: ", prediction, value_of_max)
-        return prediction[-1]
+        return last_pred
 
     # ----------------------------------------------------------------------------------
     # Helper Calculation Methods

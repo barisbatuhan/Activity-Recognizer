@@ -62,12 +62,14 @@ class MTLN_Model:
     def evaluate(self, frames):
         in1, in2, in3, in4 = self.data_generator(frames)
         predictions = self.model.predict({"input1":in1, "input2":in2, "input3":in3, "input4":in4})
+        last_pred = None
         for i in predictions:
             place_max = np.where(i == np.max(i))
             value_of_max = int(place_max[0][0])
             prediction = self.labels[value_of_max]
+            last_pred = prediction
             print("Prediction: ", prediction, value_of_max)
-        return prediction[-1]
+        return last_pred
 
     def resize_for_network(self, joint):
         list_of_all = input_preperation(joint)
