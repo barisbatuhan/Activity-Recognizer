@@ -132,40 +132,70 @@ void IRS_Detector::detectActivity()
                 break;
             }
             std::vector<std::vector<Point>> skeletons;
-            std::cout << "Frame number: " << frameCount << " & ";
-            cm->detectFrame(skeletons, capturedFrame, depthFrame);
+            std::cout << "Frame number: " << frameCount << std::endl;
+            int skelCnt = cm->detectFrame(skeletons, capturedFrame, depthFrame);
+            if(skelCnt <= 0) {
+                std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
+                cv::imshow(cvWindowName, capturedFrame);
+                continue;
+            }
 
+            Py_ssize_t dim0 = cm->skeletonAllowance;
             Py_ssize_t dim1 = 18;
             Py_ssize_t dim2 = 3;
-            PyObject *pSkel = PyTuple_New(dim1);
-            for (Py_ssize_t i = 0; i < dim1; i++)
+            
+            PyObject *pSkels = PyTuple_New(dim0);
+            for (Py_ssize_t h = 0; h < dim0; h++)
             {
-                PyObject *pJoint = PyTuple_New(dim2);
-                PyTuple_SET_ITEM(pJoint, 0, PyFloat_FromDouble(skeletons[0][i].x));
-                PyTuple_SET_ITEM(pJoint, 1, PyFloat_FromDouble(skeletons[0][i].y));
-                PyTuple_SET_ITEM(pJoint, 2, PyFloat_FromDouble(skeletons[0][i].z));
-                PyTuple_SET_ITEM(pSkel, i, pJoint);
+                // std::cout << "Skeleton " << h << std::endl;
+                PyObject *pSkel = PyTuple_New(dim1);
+                for (Py_ssize_t i = 0; i < dim1; i++)
+                {
+                    // std::cout << "-- Joint: " << skeletons[h][i].to_string() << std::endl;
+                    PyObject *pJoint = PyTuple_New(dim2);
+                    PyTuple_SET_ITEM(pJoint, 0, PyFloat_FromDouble(skeletons[h][i].x));
+                    PyTuple_SET_ITEM(pJoint, 1, PyFloat_FromDouble(skeletons[h][i].y));
+                    PyTuple_SET_ITEM(pJoint, 2, PyFloat_FromDouble(skeletons[h][i].z));
+                    PyTuple_SET_ITEM(pSkel, i, pJoint);
+                }
+                PyTuple_SET_ITEM(pSkels, h, pSkel);
             }
-            PyObject *pAddResult = PyObject_CallFunctionObjArgs(pAdder, pModel, pSkel, NULL);
+            PyObject* pFrameIdx = PyLong_FromLong(frameCount - 1);
+            PyObject *pAddResult = PyObject_CallFunctionObjArgs(pAdder, pModel, pSkels, pFrameIdx, NULL);
             if(pAddResult == NULL) {
                 std::cerr << "[ERROR][DETECTOR] Skeleton data cannot be added to Python!" << std::endl;
                 Py_Finalize();
                 return;
             }
-            std::string activity = "Activity: ";
             
-            if(frameCount > 40) {
+            if(frameCount >= 32) {
                 PyObject *pEvalResult = PyObject_CallFunctionObjArgs(pPredictor, pModel, NULL);
-                const char *activityResult = PyUnicode_AsUTF8(pEvalResult);
-                std::string actRes = activityResult;
-                activity += actRes;
                 if(pEvalResult == NULL) {
                     std::cerr << "[ERROR][DETECTOR] Problem occured while taking action result from model!" << std::endl;
                     Py_Finalize();
                     return;
                 }
+                std::vector<std::string> data;
+	            if (PyList_Check(pEvalResult)) {
+                    for(Py_ssize_t i = 0; i < PyList_Size(pEvalResult); i++) {
+				        PyObject *value = PyList_GetItem(pEvalResult, i);
+				        const char *activityResult = PyUnicode_AsUTF8(value); // WILL CHANGE, AN ARRAY OF STRINGS WILL RETURN!!!
+                        std::string actRes = activityResult;
+	            		data.push_back(actRes);
+			        }
+	            }
+
+                int yVal = 50;
+                for(int sk = 0; sk < cm->skeletonAllowance; sk++) {
+                    std::string activity = std::to_string(cm->arrMap[sk].first) + "-> " + data[sk];
+                    if(cm->arrMap[sk].second < 32) continue;
+                    // if(skeletons[sk][1].x < 0) continue;
+                    cv::putText(capturedFrame, activity.c_str(), cv::Point(50, yVal), 
+                                cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(222, 55, 22));
+                    yVal += 50;
+                }
             }
-            cv::putText(capturedFrame, activity.c_str(), cv::Point(50, 50), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(222, 55, 22));
+
             std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
             cv::imshow(cvWindowName, capturedFrame);
         }

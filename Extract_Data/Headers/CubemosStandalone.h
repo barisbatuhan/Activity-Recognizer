@@ -49,13 +49,19 @@ void CubemosStandalone::finalizePoints(std::vector<std::vector<Point>> & skeleto
         std::cout << "Skeleton: " << skeletonNum << std::endl;
         skeletonNum++;
         int jointNum = 0;
+        auto baseJoint = skeleton[1];
+        float baseDistance = depthFrame[width * baseJoint.y + baseJoint.x];
         for(auto &joint : skeleton) {
             if(joint.x > 0) {
                 float distance = depthFrame[width * joint.y + joint.x];
-                joint.x /= width;
-                joint.y /= height;
-                if(ifKinect) joint.z = distance / 3;
-                else joint.z = distance / 3000;
+                joint.x = (joint.x - baseJoint.x) / width;
+                joint.y = (joint.y - baseJoint.y) / height;
+                if(ifKinect) joint.z = (distance - baseDistance);
+                else joint.z = (distance - baseDistance) / 1000;
+                // joint.x = (joint.x) / width;
+                // joint.y = (joint.y) / height;
+                // if(ifKinect) joint.z = (distance / 3);
+                // else joint.z = (distance) / 3000;
                 if(true) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;

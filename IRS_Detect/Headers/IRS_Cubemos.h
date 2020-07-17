@@ -8,7 +8,7 @@ class IRS_Cubemos : public Cubemos {
 
 public:
     IRS_Cubemos(bool verbose = false);
-    void detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, rs2::depth_frame &depthFrame);
+    int detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, rs2::depth_frame &depthFrame);
 
 private:
     void finalizePoints(std::vector<std::vector<Point>> & skeletons, rs2::depth_frame &depthFrame, int height, int width);
@@ -16,7 +16,7 @@ private:
 
 IRS_Cubemos::IRS_Cubemos(bool verbose) : Cubemos(verbose) {}
 
-void IRS_Cubemos::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, rs2::depth_frame &depthFrame) {
+int IRS_Cubemos::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, rs2::depth_frame &depthFrame) {
     CM_Image image = {
         frame.data,
         CM_UINT8,
@@ -26,10 +26,12 @@ void IRS_Cubemos::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::M
         (int)frame.step[0],
         CM_HWC
     };
+    int skelCnt = -1;
     // Run Skeleton Tracking and display the results
     CM_ReturnCode retCode = cm_skel_estimate_keypoints(handle, &image, 192, skeletonsPresent.get());
     // track the skeletons in case of successful skeleton estimation
     if (retCode == CM_SUCCESS) {
+        skelCnt = skeletonsPresent->numSkeletons;
         if (skeletonsPresent->numSkeletons > 0) {
             // Assign tracking ids to the skeletons in the present frame
             cm_skel_update_tracking_id(handle, skeletonsLast.get(), skeletonsPresent.get());
@@ -42,12 +44,13 @@ void IRS_Cubemos::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::M
             cm_skel_release_buffer(skeletonsPresent.get());
         }
     }
+    return skelCnt;
 }
 
 void IRS_Cubemos::finalizePoints(std::vector<std::vector<Point>> & skeletons, rs2::depth_frame &depthFrame, int height, int width) {
     int skeletonNum = 1;
     for(auto &skeleton: skeletons) {
-        std::cout << "Skeleton: " << skeletonNum << std::endl;
+        // std::cout << "Skeleton: " << skeletonNum << std::endl;
         skeletonNum++;
         int jointNum = 0;
         for(auto &joint : skeleton) {

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 // opencv related packages
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -48,6 +49,10 @@ public:
     // for id tracking
     CUBEMOS_SKEL_Buffer_Ptr skeletonsPresent = createSkelBuffer();
     CUBEMOS_SKEL_Buffer_Ptr skeletonsLast = createSkelBuffer();
+    std::unordered_map<int, int> idMap; // holds for which skeleton, which array element is available 
+    std::unordered_map<int, std::pair<int, int>> arrMap; // holds at which array element, which skeleton id is available
+                                                         // and how many frames passed with this skeleton id
+    const int skeletonAllowance = 5;
     // for rendering
     cv::Scalar skeletonColor;
 
@@ -101,6 +106,10 @@ Cubemos::Cubemos(bool verbose) {
     if (retCode != CM_SUCCESS) {
         std::cerr << "[ERROR][CM] Cubemos model loading failed!" << std::endl;
     }
+
+    for(int i = 0; i < skeletonAllowance; i++) {
+        arrMap[i] = std::pair<int, int>(-1, 0);
+    }
 }
 
 Cubemos::~Cubemos() {
@@ -110,10 +119,36 @@ Cubemos::~Cubemos() {
 template <class T>
 void Cubemos::render(std::vector<std::vector<Point>> & skeletons, const CM_SKEL_Buffer* skeletonsBuffer, cv::Mat& image) {
     CV_Assert(image.type() == CV_8UC3);
-   
-    for (int i = 0; i < skeletonsBuffer->numSkeletons; i++) { 
+    skeletons = std::vector<std::vector<Point>>(skeletonAllowance, std::vector<Point>(18));
+    std::vector<bool> presentIdx(skeletonAllowance, false);
+
+    for (int i = 0; i < skeletonsBuffer->numSkeletons; i++) {
+        if(i >= skeletonAllowance) break;
+        int id = skeletonsBuffer->skeletons[i].id;
+        if(idMap.find(id) != idMap.end()) {
+            int val = idMap[id];
+            if(arrMap[val].first == id) {
+                std::cout << "Passed for " << id << " - " << val << std::endl;
+                presentIdx[val] = true;
+            }
+        } 
+    }
+
+    for(int i = 0; i < skeletonAllowance; i++) {
+        if(presentIdx[i] == false) {
+            arrMap[i] = std::pair<int, int>(-1, 0);
+        }
+    }
+
+    for (int i = 0; i < skeletonsBuffer->numSkeletons; i++) {
+        if(i >= skeletonAllowance) {
+            std::cout << "[WARN][CM] Number of persons limit at the same is passed. Not all persons will be counted" << std::endl;
+            return;
+        }
         CV_Assert(skeletonsBuffer->skeletons[i].numKeyPoints == 18);
         int id = skeletonsBuffer->skeletons[i].id;
+
+        std::string idText = "Id: " + std::to_string(id);        
 
         std::vector<Point> oneSkeleton;
         // depth is included in 2D joints
@@ -121,6 +156,9 @@ void Cubemos::render(std::vector<std::vector<Point>> & skeletons, const CM_SKEL_
             const cv::Point2f keyPoint(skeletonsBuffer->skeletons[i].keypoints_coord_x[keypointIdx],
                 skeletonsBuffer->skeletons[i].keypoints_coord_y[keypointIdx]);
             if (keyPoint != absentKeypoint) {
+                if(keypointIdx == 1) {
+                    cv::putText(image, idText, cv::Point(keyPoint.x, keyPoint.y - 70), cv::FONT_HERSHEY_COMPLEX, 0.5, skeletonColor);
+                }
                 cv::circle(image, keyPoint, 4, jointColor, -1);
                 // get the 3d point and render it on the joints
                 Point point2d(keyPoint.x, keyPoint.y, -1);
@@ -129,7 +167,40 @@ void Cubemos::render(std::vector<std::vector<Point>> & skeletons, const CM_SKEL_
                 oneSkeleton.push_back(Point(-1, -1, -1));
             }
         }
-        skeletons.push_back(oneSkeleton);
+        // skeletons.push_back(oneSkeleton);
+        if(idMap.find(id) == idMap.end()) {
+            int foundIdx = -1;
+            for(int place = 0; place < skeletonAllowance; place++) {
+                if(arrMap[place].first == -1) {
+                    foundIdx = place;
+                    break;
+                }
+            }
+            idMap[id] = foundIdx;
+            arrMap[foundIdx].first = id;
+            arrMap[foundIdx].second++;
+            skeletons[foundIdx] = oneSkeleton;
+        } 
+        else {
+            int val = idMap[id];
+            if(arrMap[val].first == id) {
+                skeletons[val] = oneSkeleton;
+                arrMap[val].second++;
+            }
+            else {
+                int foundIdx = -1;
+                for(int place = 0; place < skeletonAllowance; place++) {
+                    if(arrMap[place].first == -1) {
+                        foundIdx = place;
+                        break;
+                    }
+                }
+                idMap[id] = foundIdx;
+                arrMap[foundIdx].first = id;
+                arrMap[foundIdx].second++;
+                skeletons[foundIdx] = oneSkeleton; 
+            }
+        }
 
         // lines are drawn between joints
         for (const auto& limbKeypointsId : limbKeypointsIds) {

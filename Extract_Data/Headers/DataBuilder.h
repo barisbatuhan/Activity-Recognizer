@@ -56,16 +56,32 @@ void DataBuilder::processSingleVideoKARD(std::string path) {
     getDepthMapKARD(depthFrame, depthPath);
 
     int frameCount = 0;
+    std::string outfileLoc = path + "_skeletonvals.csv";
+    std::ofstream out_file(outfileLoc);
+    out_file << "Frame";
+    for(int i = 0; i < 18; i++) {
+        for(int j = 0; j < 3; j++) {
+            out_file << ",L" << i << "_" << j;
+        }
+    }
+    out_file << std::endl;
     while(true){
 	    cv::Mat frame;
 	    cap >> frame;
         if(frame.empty()) break;
         std::vector<std::vector<Point>> skeletons;
         cm->detectFrame(skeletons, frame, depthFrame);
+        out_file << frameCount;
+        for(int i = 0; i < 18; i++) {
+            out_file << "," << skeletons[0][i].x << "," << skeletons[0][i].y << "," << skeletons[0][i].z;
+        }
+        out_file << std::endl;
         frameCount++;
-        std::string cvWindowName = "Cubemos Skeleton Tracking from KARD Data C/C++";
-        cv::imshow(cvWindowName, frame);
+        // std::string cvWindowName = "Cubemos Skeleton Tracking from KARD Data C/C++";
+        // cv::imshow(cvWindowName, frame);
     }
+    out_file.close();
+    cap.release();
 }
 
 void DataBuilder::getDepthMapKARD(std::vector<float> &depthFrame, std::string filePath) {

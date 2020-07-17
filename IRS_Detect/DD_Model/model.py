@@ -59,15 +59,14 @@ class DD_Model:
 
     def evaluate(self, frames):
         X0, X1 = self.data_generator({"pose": frames})
-        predictions = self.model.predict([X0, X1])
-        last_pred = None
+        predictions = self.model.predict([X0, X1], verbose=0)
+        pred_str = []
         for i in predictions:
             place_max = np.where(i == np.max(i))
             value_of_max = int(place_max[0][0])
             prediction = self.labels[value_of_max]
-            last_pred = prediction
-            print("Prediction: ", prediction, value_of_max)
-        return last_pred
+            pred_str.append(prediction)
+        return pred_str
 
     # ----------------------------------------------------------------------------------
     # Helper Calculation Methods
@@ -82,18 +81,18 @@ class DD_Model:
         X_0 = []
         X_1 = []
 
-        p = np.copy(T['pose'])
-        p = zoom(p, target_l=frame_l, joints_num=joint_n, joints_dim=joint_d) 
-        M = get_CG(p)
-        X_0.append(M)
-        X_1.append(p)
+        # p = np.copy(T['pose'])
+        # p = zoom(p, target_l=frame_l, joints_num=joint_n, joints_dim=joint_d) 
+        # M = get_CG(p)
+        # X_0.append(M)
+        # X_1.append(p)
         
-        # for i in tqdm(range(len(T['pose']))): 
-        #     p = np.copy(T['pose'][i])
-        #     p = zoom(p, target_l=frame_l, joints_num=joint_n, joints_dim=joint_d) 
-        #     M = get_CG(p)
-        #     X_0.append(M)
-        #     X_1.append(p)
+        for i in tqdm(range(len(T['pose']))): 
+            p = np.copy(T['pose'][i])
+            p = zoom(p, target_l=frame_l, joints_num=joint_n, joints_dim=joint_d) 
+            M = get_CG(p)
+            X_0.append(M)
+            X_1.append(p)
         
         X_0 = np.stack(X_0)  
         X_1 = np.stack(X_1) 

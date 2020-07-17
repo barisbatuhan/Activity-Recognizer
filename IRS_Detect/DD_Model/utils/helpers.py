@@ -32,7 +32,10 @@ def zoom(p,target_l=32,joints_num=18,joints_dim=3):
 
 # Calculate JCD feature
 def norm_scale(x):
-    return (x-np.mean(x))/np.mean(x)
+    if(np.mean(x) == 0):
+        return x
+    else:
+        return (x-np.mean(x))/np.mean(x)
   
 def get_CG(p):
     M = []
