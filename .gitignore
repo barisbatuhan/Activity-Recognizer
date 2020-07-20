@@ -16,3 +16,6 @@ a.out
 
 # EXTRA BIG SIZED FILES
 Data/*
+
+# USER SPECIFIC FILES
+Extract_Data/files.txt
