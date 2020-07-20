@@ -70,10 +70,11 @@ void DataBuilder::processSingleVideoKARD(std::string path) {
 	    cap >> frame;
         if(frame.empty()) break;
         std::vector<std::vector<Point>> skeletons;
-        cm->detectFrame(skeletons, frame, depthFrame);
+        int idxWithSkel = cm->detectFrame(skeletons, frame, depthFrame);
+        if(idxWithSkel == -1) continue; // No skeleton is detected
         out_file << frameCount;
         for(int i = 0; i < 18; i++) {
-            out_file << "," << skeletons[0][i].x << "," << skeletons[0][i].y << "," << skeletons[0][i].z;
+            out_file << "," << skeletons[idxWithSkel][i].x << "," << skeletons[idxWithSkel][i].y << "," << skeletons[idxWithSkel][i].z;
         }
         out_file << std::endl;
         frameCount++;

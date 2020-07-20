@@ -128,7 +128,6 @@ void Cubemos::render(std::vector<std::vector<Point>> & skeletons, const CM_SKEL_
         if(idMap.find(id) != idMap.end()) {
             int val = idMap[id];
             if(arrMap[val].first == id) {
-                std::cout << "Passed for " << id << " - " << val << std::endl;
                 presentIdx[val] = true;
             }
         } 

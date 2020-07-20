@@ -7,15 +7,15 @@ class CubemosStandalone : public Cubemos {
 
 public:
     CubemosStandalone(bool verbose = false);
-    void detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, std::vector<float> &depthFrame, bool ifKinect = false);
+    int detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, std::vector<float> &depthFrame, bool ifKinect = false);
 
 private:
-    void finalizePoints(std::vector<std::vector<Point>> & skeletons, std::vector<float> &depthFrame, int height, int width, bool ifKinect);
+    int finalizePoints(std::vector<std::vector<Point>> & skeletons, std::vector<float> &depthFrame, int height, int width, bool ifKinect);
 };
 
 CubemosStandalone::CubemosStandalone(bool verbose) : Cubemos(verbose) {}
 
-void CubemosStandalone::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, std::vector<float> &depthFrame, bool ifKinect) {
+int CubemosStandalone::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Mat &frame, std::vector<float> &depthFrame, bool ifKinect) {
     CM_Image image = {
         frame.data,
         CM_UINT8,
@@ -34,39 +34,53 @@ void CubemosStandalone::detectFrame(std::vector<std::vector<Point>> & skeletons,
             cm_skel_update_tracking_id(handle, skeletonsLast.get(), skeletonsPresent.get());
             // Render skeleton overlays with tracking ids
             render<std::vector<int>>(skeletons, skeletonsPresent.get(), frame);
-            finalizePoints(skeletons, depthFrame, frame.rows, frame.cols, ifKinect);
+            std::cout << "Skeleton Count: " << skeletonsPresent->numSkeletons << std::endl;
+            int idxWithSkeleton = finalizePoints(skeletons, depthFrame, frame.rows, frame.cols, ifKinect);
             // Set the present frame as last one to track the next frame
             skeletonsLast.swap(skeletonsPresent);
             // Free memory of the latest frame
             cm_skel_release_buffer(skeletonsPresent.get());
+            return idxWithSkeleton;
         }
     }
+    return -1;
 }
 
-void CubemosStandalone::finalizePoints(std::vector<std::vector<Point>> & skeletons, std::vector<float> &depthFrame, int height, int width, bool ifKinect) {
+int CubemosStandalone::finalizePoints(std::vector<std::vector<Point>> & skeletons, std::vector<float> &depthFrame, int height, int width, bool ifKinect) {
     int skeletonNum = 1;
+    int idxWithSkel = -1;
+    int iterNo = 0;
+    int skelMaxJoint = -1;
     for(auto &skeleton: skeletons) {
-        std::cout << "Skeleton: " << skeletonNum << std::endl;
         skeletonNum++;
         int jointNum = 0;
         auto baseJoint = skeleton[1];
+        int skelJointCnt = 0;
+        if(baseJoint.x < 0) continue;
         float baseDistance = depthFrame[width * baseJoint.y + baseJoint.x];
         for(auto &joint : skeleton) {
             if(joint.x > 0) {
+                skelJointCnt++;
                 float distance = depthFrame[width * joint.y + joint.x];
-                joint.x = (joint.x - baseJoint.x) / width;
-                joint.y = (joint.y - baseJoint.y) / height;
-                if(ifKinect) joint.z = (distance - baseDistance);
-                else joint.z = (distance - baseDistance) / 1000;
-                // joint.x = (joint.x) / width;
-                // joint.y = (joint.y) / height;
-                // if(ifKinect) joint.z = (distance / 3);
-                // else joint.z = (distance) / 3000;
+                // joint.x = (joint.x - baseJoint.x) / width;
+                // joint.y = (joint.y - baseJoint.y) / height;
+                // if(ifKinect) joint.z = (distance - baseDistance);
+                // else joint.z = (distance - baseDistance) / 1000;
+                joint.x = (joint.x) / width;
+                joint.y = (joint.y) / height;
+                if(ifKinect) joint.z = (distance / 3);
+                else joint.z = (distance) / 3000;
                 if(true) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;
         }
+        if(skelJointCnt > skelMaxJoint) {
+            idxWithSkel = iterNo;
+            skelMaxJoint = skelJointCnt;
+        }
+        iterNo++;
     }
+    return idxWithSkel;
 }
 
 #endif
