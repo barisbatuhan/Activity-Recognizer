@@ -3,7 +3,7 @@ CFLAGS=	-w
 HEADERS=../Base/Cubemos.h ../Base/Realsense.h ./Headers/IRS_Cubemos.h ./Headers/IRS_Detector.h
 
 
-PY_PATH=C:\Users\BBT\AppData\Local\Programs\Python\Python37
+PY_PATH=$(shell python -c "from sysconfig import get_paths; print(get_paths()['data'])")
 IRS_PATH=C:\Program Files (x86)\Intel RealSense SDK 2.0
 CM_PATH=C:\Program Files\Cubemos\SkeletonTracking
 CV_PATH=C:\Program Files\opencv\build
