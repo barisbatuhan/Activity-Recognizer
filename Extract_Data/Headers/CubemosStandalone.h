@@ -34,7 +34,7 @@ int CubemosStandalone::detectFrame(std::vector<std::vector<Point>> & skeletons, 
             cm_skel_update_tracking_id(handle, skeletonsLast.get(), skeletonsPresent.get());
             // Render skeleton overlays with tracking ids
             render<std::vector<int>>(skeletons, skeletonsPresent.get(), frame);
-            std::cout << "Skeleton Count: " << skeletonsPresent->numSkeletons << std::endl;
+            // std::cout << "Skeleton Count: " << skeletonsPresent->numSkeletons << std::endl;
             int idxWithSkeleton = finalizePoints(skeletons, depthFrame, frame.rows, frame.cols, ifKinect);
             // Set the present frame as last one to track the next frame
             skeletonsLast.swap(skeletonsPresent);
@@ -62,15 +62,15 @@ int CubemosStandalone::finalizePoints(std::vector<std::vector<Point>> & skeleton
             if(joint.x > 0) {
                 skelJointCnt++;
                 float distance = depthFrame[width * joint.y + joint.x];
-                // joint.x = (joint.x - baseJoint.x) / width;
-                // joint.y = (joint.y - baseJoint.y) / height;
-                // if(ifKinect) joint.z = (distance - baseDistance);
-                // else joint.z = (distance - baseDistance) / 1000;
-                joint.x = (joint.x) / width;
-                joint.y = (joint.y) / height;
-                if(ifKinect) joint.z = (distance / 3);
-                else joint.z = (distance) / 3000;
-                if(true) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
+                joint.x = (joint.x - baseJoint.x) / (width / 10);
+                joint.y = (joint.y - baseJoint.y) / (height / 10);
+                if(ifKinect) joint.z = (distance - baseDistance);
+                else joint.z = (distance - baseDistance) / 500;
+                // joint.x = (joint.x) / width;
+                // joint.y = (joint.y) / height;
+                // if(ifKinect) joint.z = (distance / 3);
+                // else joint.z = (distance) / 3000;
+                // if(true) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;
         }

@@ -38,6 +38,7 @@ DataBuilder::~DataBuilder() {
 
 void DataBuilder::processVideosKARD(std::vector<std::string> fileList) {
     for(std::string &filePath : fileList) {
+        std::cout << "Processing: " << filePath << std::endl;
         processSingleVideoKARD(filePath);
     }
 }

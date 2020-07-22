@@ -53,12 +53,19 @@ void IRS_Cubemos::finalizePoints(std::vector<std::vector<Point>> & skeletons, rs
         // std::cout << "Skeleton: " << skeletonNum << std::endl;
         skeletonNum++;
         int jointNum = 0;
-        for(auto &joint : skeleton) {
+        auto baseJoint = skeleton[1];
+        if(baseJoint.x < 0) continue;
+        float baseDistance = depthFrame.get_distance(baseJoint.x, baseJoint.y);
+        for(auto &joint : skeleton) {     
             if(joint.x > 0) {
-                auto distance = depthFrame.get_distance(joint.x, joint.y);
-                joint.x /= width;
-                joint.y /= height;
-                joint.z = distance / 3;
+                float distance = depthFrame.get_distance(joint.x, joint.y);
+                joint.x = (joint.x - baseJoint.x) / (width / 10);
+                joint.y = (joint.y - baseJoint.y) / (height / 10);
+                joint.z = (distance - baseDistance);
+                // auto distance = depthFrame.get_distance(joint.x, joint.y);
+                // joint.x /= width;
+                // joint.y /= height;
+                // joint.z = distance / 3;
                 if(verbose) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;

@@ -15,7 +15,7 @@ public:
     IRS_Detector(std::string filePath = "-", bool verbose = false);
     ~IRS_Detector();
     void trackSkeleton();
-    void detectActivity();
+    void detectActivity(bool is3d = true);
 
 private:
     // skeleton tracker object
@@ -85,7 +85,7 @@ void IRS_Detector::trackSkeleton()
     }
 }
 
-void IRS_Detector::detectActivity()
+void IRS_Detector::detectActivity(bool is3d)
 {
     int skelHistory = 10;
     Py_Initialize();
@@ -142,7 +142,11 @@ void IRS_Detector::detectActivity()
 
             Py_ssize_t dim0 = cm->skeletonAllowance;
             Py_ssize_t dim1 = 18;
-            Py_ssize_t dim2 = 3;
+            
+            int coordSize;
+            if(is3d) coordSize = 3;
+            else coordSize = 2;
+            Py_ssize_t dim2 = coordSize;
             
             PyObject *pSkels = PyTuple_New(dim0);
             for (Py_ssize_t h = 0; h < dim0; h++)
@@ -155,7 +159,7 @@ void IRS_Detector::detectActivity()
                     PyObject *pJoint = PyTuple_New(dim2);
                     PyTuple_SET_ITEM(pJoint, 0, PyFloat_FromDouble(skeletons[h][i].x));
                     PyTuple_SET_ITEM(pJoint, 1, PyFloat_FromDouble(skeletons[h][i].y));
-                    PyTuple_SET_ITEM(pJoint, 2, PyFloat_FromDouble(skeletons[h][i].z));
+                    if(is3d) PyTuple_SET_ITEM(pJoint, 2, PyFloat_FromDouble(skeletons[h][i].z));
                     PyTuple_SET_ITEM(pSkel, i, pJoint);
                 }
                 PyTuple_SET_ITEM(pSkels, h, pSkel);
@@ -168,7 +172,7 @@ void IRS_Detector::detectActivity()
                 return;
             }
             
-            if(frameCount >= 32) {
+            if(frameCount >= 50) {
                 PyObject *pEvalResult = PyObject_CallFunctionObjArgs(pPredictor, pModel, NULL);
                 if(pEvalResult == NULL) {
                     std::cerr << "[ERROR][DETECTOR] Problem occured while taking action result from model!" << std::endl;
@@ -188,8 +192,7 @@ void IRS_Detector::detectActivity()
                 int yVal = 50;
                 for(int sk = 0; sk < cm->skeletonAllowance; sk++) {
                     std::string activity = std::to_string(cm->arrMap[sk].first) + "-> " + data[sk];
-                    if(cm->arrMap[sk].second < 32) continue;
-                    // if(skeletons[sk][1].x < 0) continue;
+                    if(cm->arrMap[sk].second < 50) continue;
                     cv::putText(capturedFrame, activity.c_str(), cv::Point(50, yVal), 
                                 cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(222, 55, 22));
                     yVal += 50;

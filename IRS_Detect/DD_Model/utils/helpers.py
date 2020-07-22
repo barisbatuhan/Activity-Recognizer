@@ -13,7 +13,7 @@ import scipy.ndimage.interpolation as inter
 from scipy.signal import medfilt 
 from scipy.spatial.distance import cdist
 
-frame_l = 32 # the length of frames
+frame_l = 50 # the length of frames
 joint_n = 18 # the number of joints
 joint_d = 3 # the dimension of joints
 clc_num = 18 # the number of class
@@ -33,7 +33,7 @@ def zoom(p,target_l=32,joints_num=18,joints_dim=3):
 # Calculate JCD feature
 def norm_scale(x):
     if(np.mean(x) == 0):
-        return x
+        return (x-np.mean(x))
     else:
         return (x-np.mean(x))/np.mean(x)
   

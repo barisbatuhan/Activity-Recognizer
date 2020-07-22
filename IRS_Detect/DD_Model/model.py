@@ -36,6 +36,7 @@ class DD_Model:
         self.labels = ["Horizontal arm wave", "High arm wave", "Two hand wave", "Catch Cap", "High throw", "Draw X",
           "Draw Tick", "Toss Paper", "Forward Kick", "Side Kick", "Take Umbrella", "Bend", "Hand Clap",
           "Walk", "Phone Call", "Drink", "Sit down", "Stand up"]
+        # self.labels = ["Horizontal arm wave", "Forward Kick", "Hand Clap", "Walk", "Sit down", "Stand up"]
         self.labels.sort()
         self.skeletons = []
 
@@ -55,17 +56,20 @@ class DD_Model:
         return self.model
 
     def load_model(self):
-        self.model.load_weights('./DD_Model/stored_models/model.h5')
+        self.model.load_weights('./DD_Model/stored_models/model_norm.h5')
 
     def evaluate(self, frames):
         X0, X1 = self.data_generator({"pose": frames})
         predictions = self.model.predict([X0, X1], verbose=0)
         pred_str = []
         for i in predictions:
-            place_max = np.where(i == np.max(i))
-            value_of_max = int(place_max[0][0])
-            prediction = self.labels[value_of_max]
-            pred_str.append(prediction)
+            if(np.max(i) < 0.4): # a threshold for confidence level
+                pred_str.append("Not sure")
+            else:
+                place_max = np.where(i == np.max(i))
+                value_of_max = int(place_max[0][0])
+                prediction = self.labels[value_of_max]
+                pred_str.append(prediction)
         return pred_str
 
     # ----------------------------------------------------------------------------------
@@ -80,12 +84,6 @@ class DD_Model:
     def data_generator(self, T):
         X_0 = []
         X_1 = []
-
-        # p = np.copy(T['pose'])
-        # p = zoom(p, target_l=frame_l, joints_num=joint_n, joints_dim=joint_d) 
-        # M = get_CG(p)
-        # X_0.append(M)
-        # X_1.append(p)
         
         for i in tqdm(range(len(T['pose']))): 
             p = np.copy(T['pose'][i])
