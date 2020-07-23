@@ -66,6 +66,7 @@ void DataBuilder::processSingleVideoKARD(std::string path) {
         }
     }
     out_file << std::endl;
+
     while(true){
 	    cv::Mat frame;
 	    cap >> frame;

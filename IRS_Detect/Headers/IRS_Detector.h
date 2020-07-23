@@ -86,8 +86,7 @@ void IRS_Detector::trackSkeleton()
 }
 
 void IRS_Detector::detectActivity(bool is3d)
-{
-    int skelHistory = 10;
+{   
     Py_Initialize();
     if (!Py_IsInitialized()) {
         std::cerr<< "[ERROR][DETECTOR] Python initalization failed.\n";
@@ -183,7 +182,7 @@ void IRS_Detector::detectActivity(bool is3d)
 	            if (PyList_Check(pEvalResult)) {
                     for(Py_ssize_t i = 0; i < PyList_Size(pEvalResult); i++) {
 				        PyObject *value = PyList_GetItem(pEvalResult, i);
-				        const char *activityResult = PyUnicode_AsUTF8(value); // WILL CHANGE, AN ARRAY OF STRINGS WILL RETURN!!!
+				        const char *activityResult = PyUnicode_AsUTF8(value);
                         std::string actRes = activityResult;
 	            		data.push_back(actRes);
 			        }
@@ -192,13 +191,12 @@ void IRS_Detector::detectActivity(bool is3d)
                 int yVal = 50;
                 for(int sk = 0; sk < cm->skeletonAllowance; sk++) {
                     std::string activity = std::to_string(cm->arrMap[sk].first) + "-> " + data[sk];
-                    if(cm->arrMap[sk].second < 50) continue;
+                    if(cm->arrMap[sk].second < 32) continue;
                     cv::putText(capturedFrame, activity.c_str(), cv::Point(50, yVal), 
                                 cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(222, 55, 22));
                     yVal += 50;
                 }
             }
-
             std::string cvWindowName = "Cubemos Skeleton Tracking with Intel Realsense Camera C/C++";
             cv::imshow(cvWindowName, capturedFrame);
         }

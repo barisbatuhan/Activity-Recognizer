@@ -60,7 +60,7 @@ protected:
     template <class T>
     void render(std::vector<std::vector<Point>> & skeletons, const CM_SKEL_Buffer* skeletonsBuffer,
                 cv::Mat& image);
-    
+    float calcDistance(Point &a, Point &b, bool ifDivide = false);
     CUBEMOS_SKEL_Buffer_Ptr createSkelBuffer();
     
     // for licensing
@@ -223,6 +223,15 @@ CUBEMOS_SKEL_Buffer_Ptr Cubemos::createSkelBuffer() {
         cm_skel_release_buffer(pb);
         delete pb;
     });
+}
+
+float Cubemos::calcDistance(Point &a, Point &b, bool ifDivide) {
+    float zDist = a.z - b.z;
+    if(ifDivide) zDist /= 10;
+    Point c(a.x - b.x, a.y - b.y, zDist);
+    float dist = pow(c.x, 2) + pow(c.y, 2) + pow(c.z, 2);
+    dist = sqrt(dist);
+    return dist;
 }
 
 #endif

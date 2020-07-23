@@ -1,6 +1,8 @@
 #ifndef CUBEMOS_STANDALONE_H
 #define CUBEMOS_STANDALONE_H
 
+#include<math.h>
+
 #include "../../Base/Cubemos.h"
 
 class CubemosStandalone : public Cubemos {
@@ -59,22 +61,18 @@ int CubemosStandalone::finalizePoints(std::vector<std::vector<Point>> & skeleton
         if(baseJoint.x < 0) continue;
         float baseDistance = depthFrame[width * baseJoint.y + baseJoint.x];
         for(auto &joint : skeleton) {
-            if(joint.x > 0) {
+            if(joint.x > 0) {   
                 skelJointCnt++;
                 float distance = depthFrame[width * joint.y + joint.x];
-                joint.x = (joint.x - baseJoint.x) / (width / 10);
-                joint.y = (joint.y - baseJoint.y) / (height / 10);
-                if(ifKinect) joint.z = (distance - baseDistance);
-                else joint.z = (distance - baseDistance) / 500;
-                // joint.x = (joint.x) / width;
-                // joint.y = (joint.y) / height;
-                // if(ifKinect) joint.z = (distance / 3);
-                // else joint.z = (distance) / 3000;
-                // if(true) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
+                joint.x = (joint.x) / width;
+                joint.y = (joint.y) / height;
+                if(ifKinect) joint.z = (distance / 3);
+                else joint.z = (distance) / 3000;
+                if(verbose) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;
         }
-        if(skelJointCnt > skelMaxJoint) {
+        if(skelJointCnt > skelMaxJoint) { // gets the skeleton with max joints in case of an extra skeleton is found as error
             idxWithSkel = iterNo;
             skelMaxJoint = skelJointCnt;
         }

@@ -36,7 +36,6 @@ class DD_Model:
         self.labels = ["Horizontal arm wave", "High arm wave", "Two hand wave", "Catch Cap", "High throw", "Draw X",
           "Draw Tick", "Toss Paper", "Forward Kick", "Side Kick", "Take Umbrella", "Bend", "Hand Clap",
           "Walk", "Phone Call", "Drink", "Sit down", "Stand up"]
-        # self.labels = ["Horizontal arm wave", "Forward Kick", "Hand Clap", "Walk", "Sit down", "Stand up"]
         self.labels.sort()
         self.skeletons = []
 
@@ -56,7 +55,7 @@ class DD_Model:
         return self.model
 
     def load_model(self):
-        self.model.load_weights('./DD_Model/stored_models/model_norm.h5')
+        self.model.load_weights('./DD_Model/stored_models/model.h5')
 
     def evaluate(self, frames):
         X0, X1 = self.data_generator({"pose": frames})

@@ -50,10 +50,9 @@ int IRS_Cubemos::detectFrame(std::vector<std::vector<Point>> & skeletons, cv::Ma
 void IRS_Cubemos::finalizePoints(std::vector<std::vector<Point>> & skeletons, rs2::depth_frame &depthFrame, int height, int width) {
     int skeletonNum = 1;
     for(auto &skeleton: skeletons) {
-        // std::cout << "Skeleton: " << skeletonNum << std::endl;
         skeletonNum++;
         int jointNum = 0;
-        auto baseJoint = skeleton[1];
+        auto baseJoint = skeleton[1]; // chest point is taken for normalization
         if(baseJoint.x < 0) continue;
         float baseDistance = depthFrame.get_distance(baseJoint.x, baseJoint.y);
         for(auto &joint : skeleton) {     
@@ -62,10 +61,6 @@ void IRS_Cubemos::finalizePoints(std::vector<std::vector<Point>> & skeletons, rs
                 joint.x = (joint.x - baseJoint.x) / (width / 10);
                 joint.y = (joint.y - baseJoint.y) / (height / 10);
                 joint.z = (distance - baseDistance);
-                // auto distance = depthFrame.get_distance(joint.x, joint.y);
-                // joint.x /= width;
-                // joint.y /= height;
-                // joint.z = distance / 3;
                 if(verbose) std::cout << "--- Joint: " << jointNum << ": " << joint.to_string() << std::endl;
             }
             jointNum++;
